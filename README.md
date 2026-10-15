@@ -76,6 +76,23 @@ sbatch run.sh
 
 The full benchmark runs haven't finished yet, so the ResNet-34 and Xception accuracies above are still pending.
 
+## Experiment tracking (MLflow)
+
+Every `train.py` run is logged to MLflow. Each model gets its own experiment (`custom_cnn`, `resnet34`, `xception`). For each run, MLflow records:
+
+- **Parameters:** the whole YAML config, flattened into keys such as `training.epochs` and `finetune_optimizer.learning_rate`
+- **Metrics:** `loss`, `accuracy`, `val_loss` and `val_accuracy` for every epoch. The `custom_cnn` and `resnet34` runs also log `test_accuracy` and `test_loss`.
+- **Artifacts:** the saved `.keras` model when you pass `--save`. For `custom_cnn`, the normalization stats file (`*_norm_stats.npz`) used at inference time is logged too.
+
+Runs are stored locally (`mlruns/` or `mlflow.db`, both git-ignored). To browse and compare them:
+
+```bash
+make ui
+# or: mlflow ui
+```
+
+Then open http://localhost:5000.
+
 ## Evaluation
 
 ```bash
@@ -154,3 +171,4 @@ CI runs automatically on every push via GitHub Actions.
 - scikit-learn, matplotlib, seaborn
 - fastapi, uvicorn, python-multipart
 - pyyaml, pillow
+- mlflow
