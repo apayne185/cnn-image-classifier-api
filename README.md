@@ -6,13 +6,15 @@ Convolutional neural network implementations in TensorFlow/Keras, structured as 
 
 ## Models
 
-| Model | Architecture | Params | Test Accuracy | Inference (CPU) | Notes |
-|---|---|---|---|---|---|
-| `custom_cnn` | Conv2D → MaxPool → Dense | 1.4M | **88.4%** | 174ms | Trained from scratch, 3 epochs |
-| `resnet34` | 34-layer residual network | 21.3M | — | 259ms | Custom `ResidualUnit` layer |
-| `xception` | Xception (ImageNet pretrained) | 20.9M | — | 369ms | Two-phase transfer learning |
+| Model | Dataset | Architecture | Params | Test Accuracy | Inference (CPU) | Notes |
+|---|---|---|---|---|---|---|
+| `custom_cnn` | Fashion-MNIST | Conv2D → MaxPool → Dense | 1.4M | **88.4%** | 174ms | Trained from scratch, 3 epochs on CPU |
+| `resnet34` | Fashion-MNIST (upscaled to 224×224) | 34-layer residual network | 21.3M | pending | 259ms | Custom `ResidualUnit` layer |
+| `xception` | tf_flowers | Xception (ImageNet pretrained) | 20.9M | pending | 369ms | Two-phase transfer learning |
 
-> Accuracy for ResNet-34 and Xception pending full training run (GPU recommended).
+> **The datasets differ, so the accuracies can't all be compared.** `custom_cnn` and `resnet34` are both trained on Fashion-MNIST (10 classes, grayscale), so you can compare those two. `xception` is trained on tf_flowers (5 classes, RGB photos), so its accuracy can't be compared with the other two.
+>
+> ResNet-34 and Xception accuracy is pending. Those runs are set up for the SLURM GPU cluster (see [Training on a SLURM GPU cluster](#training-on-a-slurm-gpu-cluster)), and the table will be updated when they finish.
 
 ## Project structure
 
