@@ -72,7 +72,7 @@ sbatch run.sh
 
 - pointing `LD_LIBRARY_PATH` at the pip-installed CUDA libraries
 - raising the memory request to 64G after out-of-memory failures
-- moving image resizing to the CPU to avoid an int32 overflow in `ResizeBilinear` on large batches
+- moving the 224×224 upscale of Fashion-MNIST for ResNet-34 to the CPU, because the GPU `ResizeBilinear` kernel hits an int32 overflow at about 3 billion elements
 
 The full benchmark runs haven't finished yet, so the ResNet-34 and Xception accuracies above are still pending.
 
