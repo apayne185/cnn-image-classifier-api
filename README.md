@@ -59,6 +59,23 @@ make train-cnn
 
 Edit any `configs/*.yaml` file to change epochs, optimizer, learning rate, etc. without touching the code.
 
+### Training on a SLURM GPU cluster
+
+`run.sh` is a SLURM batch script that trains and evaluates ResNet-34 and Xception on a single GPU:
+
+```bash
+sbatch run.sh
+# logs go to results/slurm/cnn-train_<jobid>.log
+```
+
+**Status:** I ran this job on the university's SLURM GPU cluster and debugged it there. The fixes were:
+
+- pointing `LD_LIBRARY_PATH` at the pip-installed CUDA libraries
+- raising the memory request to 64G after out-of-memory failures
+- moving image resizing to the CPU to avoid an int32 overflow in `ResizeBilinear` on large batches
+
+The full benchmark runs haven't finished yet, so the ResNet-34 and Xception accuracies above are still pending.
+
 ## Evaluation
 
 ```bash
