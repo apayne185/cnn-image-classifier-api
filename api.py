@@ -10,6 +10,7 @@ Environment variables:
 import io
 import os
 from contextlib import asynccontextmanager
+from typing import Annotated
 
 import numpy as np
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -61,7 +62,7 @@ def health():
 
 
 @app.post("/predict")
-async def predict(file: UploadFile = File(...)):
+async def predict(file: Annotated[UploadFile, File()]):
     if _model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
     if not file.content_type.startswith("image/"):

@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 from src.models import custom_cnn, resnet34
 
