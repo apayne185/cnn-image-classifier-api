@@ -1,18 +1,20 @@
 # CNN Models for Image Classification
 
-Convolutional neural network implementations in TensorFlow/Keras, structured as a runnable Python package with a CLI training interface, YAML configs, and evaluation tooling.
+Convolutional neural network implementations in TensorFlow/Keras, structured as a runnable Python package with a CLI training interface, YAML configs, MLflow experiment tracking, and evaluation tooling. Trained models are served two ways: a Dockerized FastAPI REST API and a Gradio web demo.
 
 **[Live demo on Hugging Face Spaces](https://huggingface.co/spaces/apayne1850/cv-cnns)**
 
 ## Models
 
-| Model | Architecture | Params | Test Accuracy | Inference (CPU) | Notes |
-|---|---|---|---|---|---|
-| `custom_cnn` | Conv2D → MaxPool → Dense | 1.4M | **88.4%** | 174ms | Trained from scratch, 3 epochs |
-| `resnet34` | 34-layer residual network | 21.3M | — | 259ms | Custom `ResidualUnit` layer |
-| `xception` | Xception (ImageNet pretrained) | 20.9M | — | 369ms | Two-phase transfer learning |
+| Model | Dataset | Architecture | Params | Test Accuracy | Inference (CPU) | Notes |
+|---|---|---|---|---|---|---|
+| `custom_cnn` | Fashion-MNIST | Conv2D → MaxPool → Dense | 1.4M | **88.4%** | 174ms | Trained from scratch, 3 epochs on CPU |
+| `resnet34` | Fashion-MNIST (upscaled to 224×224) | 34-layer residual network | 21.3M | pending | 259ms | Custom `ResidualUnit` layer |
+| `xception` | tf_flowers | Xception (ImageNet pretrained) | 20.9M | pending | 369ms | Two-phase transfer learning |
 
-> Accuracy for ResNet-34 and Xception pending full training run (GPU recommended).
+> **The datasets differ, so the accuracies can't all be compared.** `custom_cnn` and `resnet34` are both trained on Fashion-MNIST (10 classes, grayscale), so you can compare those two. `xception` is trained on tf_flowers (5 classes, RGB photos), so its accuracy can't be compared with the other two.
+>
+> ResNet-34 and Xception accuracy is pending. Those runs are set up for the SLURM GPU cluster (see [Training on a SLURM GPU cluster](#training-on-a-slurm-gpu-cluster)), and the table will be updated when they finish.
 
 ## Project structure
 
@@ -33,7 +35,7 @@ demo.py           # Gradio web demo
 
 ## Setup
 
-> Requires Python 3.10 — TensorFlow does not support 3.11+.
+> Tested on Python 3.10, which is the version used by CI, the Docker image and the SLURM cluster environment. Newer TensorFlow releases also support 3.11+, but this project hasn't been tested on them.
 
 ```bash
 pip install -r requirements-dev.txt
@@ -56,6 +58,40 @@ make train-cnn
 ```
 
 Edit any `configs/*.yaml` file to change epochs, optimizer, learning rate, etc. without touching the code.
+
+### Training on a SLURM GPU cluster
+
+`run.sh` is a SLURM batch script that trains and evaluates ResNet-34 and Xception on a single GPU:
+
+```bash
+sbatch run.sh
+# logs go to results/slurm/cnn-train_<jobid>.log
+```
+
+**Status:** I ran this job on the university's SLURM GPU cluster and debugged it there. The fixes were:
+
+- pointing `LD_LIBRARY_PATH` at the pip-installed CUDA libraries
+- raising the memory request to 64G after out-of-memory failures
+- moving the 224×224 upscale of Fashion-MNIST for ResNet-34 to the CPU, because the GPU `ResizeBilinear` kernel hits an int32 overflow at about 3 billion elements
+
+The full benchmark runs haven't finished yet, so the ResNet-34 and Xception accuracies above are still pending.
+
+## Experiment tracking (MLflow)
+
+Every `train.py` run is logged to MLflow. Each model gets its own experiment (`custom_cnn`, `resnet34`, `xception`). For each run, MLflow records:
+
+- **Parameters:** the whole YAML config, flattened into keys such as `training.epochs` and `finetune_optimizer.learning_rate`
+- **Metrics:** `loss`, `accuracy`, `val_loss` and `val_accuracy` for every epoch. The `custom_cnn` and `resnet34` runs also log `test_accuracy` and `test_loss`.
+- **Artifacts:** the saved `.keras` model when you pass `--save`. For `custom_cnn`, the normalization stats file (`*_norm_stats.npz`) used at inference time is logged too.
+
+Runs are stored locally (`mlruns/` or `mlflow.db`, both git-ignored). To browse and compare them:
+
+```bash
+make ui
+# or: mlflow ui
+```
+
+Then open http://localhost:5000.
 
 ## Evaluation
 
@@ -116,7 +152,7 @@ make docker-up
 docker compose up
 ```
 
-The model is volume-mounted from `./saved_models` so you don't need to rebuild the image when you retrain. Set `MODEL_PATH` and `MODEL_TYPE` in `docker-compose.yml` to switch models.
+This runs the FastAPI service in Docker. The image contains only the code and dependencies, not the model. The trained model is mounted from `./saved_models`, so after retraining you just restart the container and don't need to rebuild the image. To switch models, set `MODEL_PATH` and `MODEL_TYPE` in `docker-compose.yml`.
 
 ## Tests
 
@@ -135,3 +171,4 @@ CI runs automatically on every push via GitHub Actions.
 - scikit-learn, matplotlib, seaborn
 - fastapi, uvicorn, python-multipart
 - pyyaml, pillow
+- mlflow

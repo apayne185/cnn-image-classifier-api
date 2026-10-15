@@ -2,10 +2,12 @@
 import argparse
 
 import mlflow
+import numpy as np
 import yaml
 from tensorflow import keras
 
 from src.data import fashion_mnist, flowers
+from src.data.fashion_mnist import normalization_stats
 from src.models import custom_cnn, resnet34, transfer
 
 
@@ -171,8 +173,6 @@ def main():
             # Save per-pixel normalization stats for fashion_mnist models so
             # inference code can apply the same transform used during training.
             if cfg.get("dataset") == "fashion_mnist" and cfg["model"] != "resnet34":
-                import numpy as np
-                from src.data.fashion_mnist import normalization_stats
                 stats_path = save_path.replace(".keras", "_norm_stats.npz")
                 X_mean, X_std = normalization_stats()
                 np.savez(stats_path, X_mean=X_mean, X_std=X_std)
