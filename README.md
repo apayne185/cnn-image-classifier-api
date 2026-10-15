@@ -33,7 +33,7 @@ demo.py           # Gradio web demo
 
 ## Setup
 
-> Requires Python 3.10 — TensorFlow does not support 3.11+.
+> Tested on Python 3.10, which is the version used by CI, the Docker image and the SLURM cluster environment. Newer TensorFlow releases also support 3.11+, but this project hasn't been tested on them.
 
 ```bash
 pip install -r requirements-dev.txt
