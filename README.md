@@ -1,6 +1,6 @@
 # CNN Models for Image Classification
 
-Convolutional neural network implementations in TensorFlow/Keras, structured as a runnable Python package with a CLI training interface, YAML configs, and evaluation tooling.
+Convolutional neural network implementations in TensorFlow/Keras, structured as a runnable Python package with a CLI training interface, YAML configs, MLflow experiment tracking, and evaluation tooling. Trained models are served two ways: a Dockerized FastAPI REST API and a Gradio web demo.
 
 **[Live demo on Hugging Face Spaces](https://huggingface.co/spaces/apayne1850/cv-cnns)**
 
@@ -152,7 +152,7 @@ make docker-up
 docker compose up
 ```
 
-The model is volume-mounted from `./saved_models` so you don't need to rebuild the image when you retrain. Set `MODEL_PATH` and `MODEL_TYPE` in `docker-compose.yml` to switch models.
+This runs the FastAPI service in Docker. The image contains only the code and dependencies, not the model. The trained model is mounted from `./saved_models`, so after retraining you just restart the container and don't need to rebuild the image. To switch models, set `MODEL_PATH` and `MODEL_TYPE` in `docker-compose.yml`.
 
 ## Tests
 
